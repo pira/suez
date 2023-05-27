@@ -93,7 +93,8 @@ def channel_table(
     table.add_column("local\nfee_rate\n(ppm)", justify="right", style="bright_blue")
     table.add_column("remote\nbase_fee\n(msat)", justify="right", style="bright_yellow")
     table.add_column("remote\nfee_rate\n(ppm)", justify="right", style="bright_yellow")
-    table.add_column("\nuptime\n(%)", justify="right")
+    if not show_forwarding_stats:
+        table.add_column("\nuptime\n(%)", justify="right")
     table.add_column("last\nforward\n(days)", justify="right")
     table.add_column("local\nfees\n(sat)", justify="right", style="bright_cyan")
     if show_forwarding_stats:
@@ -165,9 +166,14 @@ def channel_table(
             str(c.local_fee_rate) if c.local_fee_rate is not None else "-",
             str(c.remote_base_fee) if c.remote_base_fee is not None else "-",
             str(c.remote_fee_rate) if c.remote_fee_rate is not None else "-",
-            f"[green]{uptime}[/green]"
-            if c.active
-            else f"[bright_red]{uptime}[/bright_red]",
+        ]
+        if not show_forwarding_stats:
+            columns += [
+                f"[green]{uptime}[/green]"
+                if c.active
+                else f"[bright_red]{uptime}[/bright_red]",
+            ]
+        columns += [
             _since(c.last_forward) if c.last_forward else "never",
             f"{round(c.local_fees_msat / 1000):,}"
             if c.local_fees_msat
@@ -194,9 +200,10 @@ def channel_table(
                 f"{s:,}" if s is not None else "-",
             ]
         alias_color = "bright_blue" if c.opener == "local" else "bright_yellow"
+        alias_symbol = ">" if c.opener == "local" else "<"
         alias = c.remote_alias if c.remote_alias else c.remote_node_id[:16]
         columns += [
-            f"[{alias_color}]{markup.escape(alias)}[/{alias_color}]",
+            f"{alias_symbol}[{alias_color}]{markup.escape(alias)}[/{alias_color}]",
         ]
         if show_chan_ids:
             columns += [c.chan_id]
